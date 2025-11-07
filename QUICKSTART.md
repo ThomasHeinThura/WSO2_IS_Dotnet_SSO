@@ -1,262 +1,239 @@
-# Distribution Management System - Quick Start Guide
+# WSO2 IS + .NET 9 SSO - Quick Start Guide
 
-## WSO2 IS 7.1 + .NET 9 Integration
+## 🎯 Overview
+
+A complete Single Sign-On (SSO) solution integrating **WSO2 Identity Server 7.1** with **.NET 9** featuring:
+- Custom login page (OAuth2 Password Grant)
+- JWT Bearer token authentication
+- Role-based access control
+- Product management system
+- Web UI dashboard
+
+**Repository:** https://github.com/ThomasHeinThura/WSO2_IS_Dotnet_SSO
 
 ---
 
 ## 📋 Prerequisites
 
-- ✅ macOS with Homebrew installed
-- ✅ .NET 9 SDK: `brew install --cask dotnet-sdk`
-- ✅ WSO2 IS 7.1 configured at https://iam.bimats.com
+- ✅ .NET 9 SDK ([download](https://dotnet.microsoft.com/download/dotnet/9.0))
+- ✅ Git installed
+- ✅ WSO2 IS 7.1 running at https://iam.bimats.com (or your instance)
 
 ---
 
-## 🚀 Quick Setup (5 minutes)
+## 🚀 Quick Setup (10 minutes)
 
-### Step 1: Run Setup Script
+### Step 1: Clone Repository
+
+```bash
+git clone https://github.com/ThomasHeinThura/WSO2_IS_Dotnet_SSO.git
+cd WSO2_IS_Dotnet_SSO
+```
+
+### Step 2: Run Setup Script
 
 ```bash
 # Make script executable
-chmod +x setup_script.sh
+chmod +x setup.sh
 
 # Run setup
-./setup_script.sh
+./setup.sh
 ```
 
-This creates the complete project structure with all layers.
+This will:
+- ✅ Verify .NET 9 is installed
+- ✅ Restore NuGet packages
+- ✅ Create `.env` file from template
+- ✅ Display next steps
 
-### Step 2: Add Code Files
+### Step 3: Configure WSO2 Credentials
 
-Copy all code from the PDF guide into the respective files:
-
-```
-src/
-├── DistributionManagement.Domain/
-│   ├── Entities/Product.cs, User.cs
-│   └── Enums/UserRole.cs
-├── DistributionManagement.Application/
-│   ├── DTOs/LoginRequest.cs, LoginResponse.cs, etc.
-│   ├── Interfaces/IAuthenticationService.cs, etc.
-│   └── Services/ProductService.cs
-├── DistributionManagement.Infrastructure/
-│   ├── Data/ApplicationDbContext.cs, DbInitializer.cs
-│   ├── Repositories/ProductRepository.cs
-│   └── ExternalServices/WSO2AuthenticationService.cs
-└── DistributionManagement.API/
-    ├── Controllers/AuthController.cs, ProductController.cs, UserController.cs
-    ├── Middleware/ExceptionHandlingMiddleware.cs
-    ├── Configuration/AuthenticationConfiguration.cs, DependencyInjection.cs
-    ├── Program.cs
-    └── appsettings.json
-```
-
-### Step 3: Configure Environment
+Edit the `.env` file with your WSO2 details:
 
 ```bash
-cd src/DistributionManagement.API
-
-# Copy environment file
-cp .env.example .env
-
-# Edit with your credentials (already pre-filled)
-nano .env
+nano src/DistributionManagement.API/.env
 ```
 
-### Step 4: Build and Run
+Update these values:
 
 ```bash
-# Build solution
+# WSO2 OAuth2
+WSO2__TokenEndpoint=https://iam.bimats.com/oauth2/token
+WSO2__UserInfoEndpoint=https://iam.bimats.com/oauth2/userinfo
+WSO2__ClientId=YOUR_CLIENT_ID
+WSO2__ClientSecret=YOUR_CLIENT_SECRET
+
+# JWT
+JWT__Issuer=https://iam.bimats.com/oauth2/token
+JWT__Audience=YOUR_CLIENT_ID
+
+# Database
+Database__Provider=SQLite
+ConnectionStrings__DefaultConnection=Data Source=distribution.db
+
+# Environment
+ASPNETCORE_ENVIRONMENT=Development
+```
+
+### Step 4: Build Solution
+
+```bash
 dotnet build
-
-# Run application
-cd src/DistributionManagement.API
-dotnet run
 ```
 
-Application will start at:
-- **Swagger UI**: https://localhost:5001/swagger
-- **API**: https://localhost:5001/api
+Expected output:
+```
+Build succeeded with 0 warnings.
+```
+
+### Step 5: Run Application
+
+```bash
+dotnet run --project src/DistributionManagement.API
+```
+
+Expected output:
+```
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5299
+```
+
+### Step 6: Access Application
+
+| URL | Purpose |
+|-----|---------|
+| http://localhost:5299 | Web UI (Login page) |
+| http://localhost:5299/swagger | API Documentation |
 
 ---
 
-## 🔐 Testing Authentication
+## 🔐 Test Login
 
-### 1. Login (Get Token)
+Use these test users (must exist in your WSO2 IS):
 
-**Using cURL:**
+| Username | Role | Access |
+|----------|------|--------|
+| **yks** | yks_admin | Full access + Users page |
+| **bimdevops** | yks_user | Create & Edit products |
+| **yks1** | yks_test | View products only |
+
+### Via Web UI
+1. Open http://localhost:5299
+2. Enter username & password
+3. View products dashboard
+
+### Via cURL
+
 ```bash
-curl -X POST https://localhost:5001/api/auth/login \
+# Login
+curl -X POST http://localhost:5299/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "username": "yks",
-    "password": "your_password"
-  }' \
-  -k
+    "password": "YOUR_PASSWORD"
+  }'
 ```
 
-**Response:**
+Response:
 ```json
 {
-  "accessToken": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "accessToken": "eyJhbGciOiJSUzI1NiIs...",
   "tokenType": "Bearer",
   "expiresIn": 3600,
-  "refreshToken": "...",
   "userInfo": {
     "username": "yks",
-    "email": "yks@example.com",
     "role": "yks_admin",
-    "roles": ["yks_admin"],
-    "groups": ["yksgroup"]
+    "roles": ["yks_admin"]
   }
 }
 ```
 
-### 2. Use Token for API Calls
-
-**Get all products:**
-```bash
-curl -X GET https://localhost:5001/api/product \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -k
-```
-
-**Create product (admin/user only):**
-```bash
-curl -X POST https://localhost:5001/api/product \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "New Product",
-    "description": "Product Description",
-    "price": 99.99,
-    "stockQuantity": 100,
-    "category": "Electronics",
-    "sku": "SKU999",
-    "isActive": true
-  }' \
-  -k
-```
-
 ---
 
-## 👥 User Roles & Access
+## 🛠️ Common Commands
 
-| User | Role | Access |
-|------|------|--------|
-| **yks** | yks_admin | View users, CRUD products |
-| **yks1** | yks_test | View products only |
-| **bimdevops** | yks_user | Edit & view products |
-
-### Role Permissions
-
-```
-GET    /api/product         → yks_admin, yks_user, yks_test
-POST   /api/product         → yks_admin, yks_user
-PUT    /api/product/{id}    → yks_admin, yks_user
-DELETE /api/product/{id}    → yks_admin only
-GET    /api/user            → yks_admin only
-```
-
----
-
-## 🏗️ Project Structure
-
-```
-DistributionManagementSystem/
-│
-├── src/
-│   ├── Domain/              # Core entities (Product, User)
-│   ├── Application/         # Business logic & interfaces
-│   ├── Infrastructure/      # Data access & WSO2 integration
-│   └── API/                 # REST endpoints
-│
-├── .gitignore
-├── README.md
-└── DistributionManagementSystem.sln
-```
-
-**Clean Architecture Flow:**
-```
-API → Infrastructure → Application → Domain
-```
-
----
-
-## 🔧 Common Commands
-
-### Development
+### Build & Run
 
 ```bash
-# Run in watch mode (auto-reload)
-dotnet watch run
-
 # Build solution
 dotnet build
 
-# Clean solution
-dotnet clean
+# Run with auto-reload
+dotnet watch run --project src/DistributionManagement.API
+
+# Run application
+dotnet run --project src/DistributionManagement.API
 ```
 
 ### Database
 
 ```bash
-# Create migration
-dotnet ef migrations add MigrationName --project ../DistributionManagement.Infrastructure
-
-# Apply migrations
-dotnet ef database update --project ../DistributionManagement.Infrastructure
-
-# Remove last migration
-dotnet ef migrations remove --project ../DistributionManagement.Infrastructure
+# Reset database (delete and recreate)
+rm src/DistributionManagement.API/distribution.db
+dotnet run --project src/DistributionManagement.API
 ```
 
-### Testing
+### API Testing
 
 ```bash
-# Run all tests
-dotnet test
+# Get all products
+curl -X GET http://localhost:5299/api/product \
+  -H "Authorization: Bearer YOUR_TOKEN"
 
-# Run with coverage
-dotnet test /p:CollectCoverage=true
+# Create product
+curl -X POST http://localhost:5299/api/product \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "New Product",
+    "price": 99.99,
+    "stockQuantity": 50,
+    "category": "Electronics",
+    "sku": "SKU123",
+    "isActive": true
+  }'
 ```
 
 ---
 
-## 🐛 Troubleshooting
+## 📁 Project Structure
 
-### Issue: Authentication Failed
-
-**Solution:**
-1. Verify WSO2 IS is running at https://iam.bimats.com
-2. Check credentials in `.env` file
-3. Ensure user exists in WSO2 IS with correct role
-4. Test password grant type is enabled in WSO2 application
-
-### Issue: Role Authorization Not Working
-
-**Solution:**
-1. Check JWT token contains `roles` claim (decode at jwt.io)
-2. Verify role names match exactly (case-sensitive)
-3. Check `RoleClaimType = "roles"` in JWT configuration
-
-### Issue: Database Error
-
-**Solution:**
-```bash
-# Delete database and recreate
-rm distribution.db
-dotnet ef database update --project ../DistributionManagement.Infrastructure
 ```
-
-### Issue: HTTPS Certificate Error
-
-**Solution:**
-```bash
-# Trust development certificate
-dotnet dev-certs https --trust
-
-# Or use -k flag with curl for testing
+WSO2_IS_Dotnet_SSO/
+├── src/
+│   ├── DistributionManagement.Domain/
+│   │   ├── Entities/
+│   │   │   ├── Product.cs
+│   │   │   └── User.cs
+│   │   └── Enums/
+│   │       └── UserRole.cs
+│   │
+│   ├── DistributionManagement.Application/
+│   │   ├── DTOs/
+│   │   ├── Interfaces/
+│   │   └── Services/
+│   │
+│   ├── DistributionManagement.Infrastructure/
+│   │   ├── Data/
+│   │   ├── Repositories/
+│   │   └── ExternalServices/
+│   │       └── WSO2AuthenticationService.cs
+│   │
+│   └── DistributionManagement.API/
+│       ├── Controllers/
+│       ├── Middleware/
+│       ├── Configuration/
+│       ├── wwwroot/
+│       │   ├── index.html (Login page)
+│       │   ├── styles.css
+│       │   └── app.js
+│       ├── Program.cs
+│       └── appsettings.json
+│
+├── setup.sh
+├── README.md
+├── QUICKSTART.md
+└── WSO2_IS_Dotnet_SSO.sln
 ```
 
 ---
@@ -264,65 +241,78 @@ dotnet dev-certs https --trust
 ## 📝 API Endpoints
 
 ### Authentication
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/api/auth/login` | ❌ | Login with username/password |
-| GET | `/api/auth/me` | ✅ | Get current user info |
-| POST | `/api/auth/validate` | ❌ | Validate JWT token |
+```
+POST   /api/auth/login       → Login (get JWT)
+GET    /api/auth/me          → Current user info
+POST   /api/auth/validate    → Validate token
+```
 
 ### Products
-
-| Method | Endpoint | Roles | Description |
-|--------|----------|-------|-------------|
-| GET | `/api/product` | All | Get all products |
-| GET | `/api/product/{id}` | All | Get product by ID |
-| POST | `/api/product` | Admin, User | Create new product |
-| PUT | `/api/product/{id}` | Admin, User | Update product |
-| DELETE | `/api/product/{id}` | Admin | Delete product |
+```
+GET    /api/product          → All products (all roles)
+GET    /api/product/{id}     → Single product (all roles)
+POST   /api/product          → Create (admin, user)
+PUT    /api/product/{id}     → Update (admin, user)
+DELETE /api/product/{id}     → Delete (admin only)
+```
 
 ### Users
-
-| Method | Endpoint | Roles | Description |
-|--------|----------|-------|-------------|
-| GET | `/api/user` | Admin | Get all users |
-
----
-
-## 🔐 Security Best Practices
-
-✅ **DO:**
-- Use `.env` file for sensitive data (never commit)
-- Always use HTTPS in production
-- Implement rate limiting
-- Validate all user input
-- Log security events
-- Use strong passwords for WSO2 users
-
-❌ **DON'T:**
-- Commit secrets to Git
-- Log sensitive data (passwords, tokens)
-- Use HTTP in production
-- Trust client-side validation only
-- Expose detailed error messages to clients
+```
+GET    /api/user             → All users (admin only)
+```
 
 ---
 
-## 📚 Key Technologies
+## 🐛 Troubleshooting
 
-- **.NET 9**: Latest framework
-- **WSO2 IS 7.1**: Identity & Access Management
-- **OAuth2 ROPC**: Password grant flow
-- **JWT**: Bearer token authentication
-- **Entity Framework Core**: ORM
-- **Clean Architecture**: Separation of concerns
-- **Swagger/OpenAPI**: API documentation
+### WSO2 Connection Failed
+
+```bash
+# Check WSO2 is running
+curl -X GET https://iam.bimats.com/oauth2/token
+
+# Verify credentials in .env
+cat src/DistributionManagement.API/.env
+
+# Test OAuth2 directly
+curl -X POST https://iam.bimats.com/oauth2/token \
+  -H "Authorization: Basic BASE64_ENCODED_CREDENTIALS" \
+  -d "grant_type=password&username=yks&password=PASSWORD"
+```
+
+### Port 5299 Already in Use
+
+```bash
+# macOS/Linux
+lsof -ti:5299 | xargs kill -9
+
+# Windows
+netstat -ano | findstr :5299
+taskkill /PID PID_NUMBER /F
+```
+
+### 403 Unauthorized on API Calls
+
+1. Verify token is valid (not expired)
+2. Check Authorization header: `Authorization: Bearer TOKEN`
+3. Verify user role exists in WSO2
+4. Decode token at https://jwt.io
+
+### Database Error
+
+```bash
+# Reset database
+rm src/DistributionManagement.API/distribution.db
+
+# Restart application
+dotnet run --project src/DistributionManagement.API
+```
 
 ---
 
-## 🌐 Environment Variables
+## 🔑 Environment Variables
 
-Configure via `.env` file or system environment:
+Configure via `.env` file:
 
 ```bash
 # WSO2 Configuration
@@ -336,58 +326,50 @@ JWT__Issuer=https://iam.bimats.com/oauth2/token
 JWT__Audience=7eWli_Xh2SdqbNQHfex0nZfC1mUa
 
 # Database
-Database__Provider=SQLite  # or PostgreSQL for production
+Database__Provider=SQLite
 ConnectionStrings__DefaultConnection=Data Source=distribution.db
 
 # Environment
 ASPNETCORE_ENVIRONMENT=Development
 ```
 
-**Note:** Use double underscores `__` to represent nested JSON keys in environment variables.
+---
+
+## 📚 Key Features
+
+✅ **Custom Login Page** - No WSO2 hosted pages  
+✅ **OAuth2 ROPC Flow** - Password grant authentication  
+✅ **JWT Tokens** - Stateless authentication  
+✅ **Role-Based Access Control** - 3 user roles  
+✅ **Web Dashboard** - Modern UI for products management  
+✅ **RESTful API** - Full CRUD operations  
+✅ **Swagger Documentation** - Interactive API explorer  
+✅ **Clean Architecture** - Domain, Application, Infrastructure, API layers  
+✅ **SQLite Database** - 11 pre-seeded products  
+✅ **Global Error Handling** - Centralized exception handling  
 
 ---
 
-## 🎯 Next Steps
+## 🚀 Next Steps
 
-After basic setup:
-
-1. ✅ Test all API endpoints via Swagger
-2. ✅ Implement frontend (React/Blazor/MVC)
-3. ✅ Add unit and integration tests
-4. ✅ Set up CI/CD pipeline
-5. ✅ Configure production database (PostgreSQL)
-6. ✅ Implement refresh token mechanism
-7. ✅ Add comprehensive logging
-8. ✅ Set up monitoring and alerting
+1. ✅ Clone repository
+2. ✅ Run `setup.sh`
+3. ✅ Configure `.env` with WSO2 credentials
+4. ✅ Build: `dotnet build`
+5. ✅ Run: `dotnet run --project src/DistributionManagement.API`
+6. ✅ Access: http://localhost:5299
+7. ✅ Test login and API endpoints
 
 ---
 
-## 📞 Support & Resources
+## 📞 Support Resources
 
-- **WSO2 IS Docs**: https://is.docs.wso2.com/en/7.1.0/
-- **.NET Docs**: https://learn.microsoft.com/en-us/dotnet/
-- **OAuth2 Spec**: https://oauth.net/2/
-- **JWT Info**: https://jwt.io
-
----
-
-## ✅ Checklist
-
-Before deploying to production:
-
-- [ ] Change default credentials
-- [ ] Use PostgreSQL database
-- [ ] Configure SSL certificates
-- [ ] Set up proper logging
-- [ ] Implement rate limiting
-- [ ] Add health checks
-- [ ] Configure CORS properly
-- [ ] Set up backup strategy
-- [ ] Review security settings
-- [ ] Load test the application
+- [WSO2 IS Documentation](https://is.docs.wso2.com/en/7.1.0/)
+- [.NET 9 Documentation](https://learn.microsoft.com/en-us/dotnet/)
+- [OAuth2 Specification](https://oauth.net/2/)
+- [JWT.io - JWT Debugger](https://jwt.io)
 
 ---
 
+**Repository:** https://github.com/ThomasHeinThura/WSO2_IS_Dotnet_SSO  
 **Happy Coding! 🚀**
-
-For detailed implementation, refer to the complete PDF guide.
