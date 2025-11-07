@@ -35,23 +35,24 @@ public static class AuthenticationConfiguration
                 ValidateIssuerSigningKey = false,
                 ValidateLifetime = true,
                 ClockSkew = TimeSpan.FromMinutes(5),
-                RoleClaimType = "roles"
+                RoleClaimType = ClaimTypes.Role
             };
 
             options.Events = new JwtBearerEvents
             {
                 OnTokenValidated = context =>
                 {
-                    // ✅ FIX: Extract roles from JWT token and add them as claims
                     var claimsIdentity = context.Principal?.Identity as ClaimsIdentity;
+                    if (claimsIdentity == null)
+                        return Task.CompletedTask;
+
+                    // ✅ FIX: Get roles from the "roles" claim in the token
+                    var rolesClaim = context.Principal?.FindAll("roles");
                     
-                    if (claimsIdentity != null)
+                    if (rolesClaim != null && rolesClaim.Any())
                     {
-                        // Get existing roles from token
-                        var existingRoles = context.Principal?.FindAll("roles") ?? Enumerable.Empty<Claim>();
-                        
-                        // Add each role as a role claim
-                        foreach (var role in existingRoles)
+                        // Add each role as ClaimTypes.Role
+                        foreach (var role in rolesClaim)
                         {
                             claimsIdentity.AddClaim(new Claim(ClaimTypes.Role, role.Value));
                         }

@@ -68,6 +68,7 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");
 
+app.UseMiddleware<RolesMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 app.UseAuthentication();
