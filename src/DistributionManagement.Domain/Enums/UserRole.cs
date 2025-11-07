@@ -1,19 +1,22 @@
 namespace DistributionManagement.Domain.Enums;
-/// &lt;summary&gt;
+
+/// <summary>
 /// Defines the user roles in the system matching WSO2 IS roles
-/// &lt;/summary&gt;
+/// </summary>
 public enum UserRole
 {
-/// &lt;summary&gt;
-/// Admin role with full access
-/// &lt;/summary&gt;
-YksAdmin = 1,
-/// &lt;summary&gt;
-/// User role with edit and view access
-/// &lt;/summary&gt;
-YksUser = 2,
-/// &lt;summary&gt;
-/// Test role with view-only access
-/// &lt;/summary&gt;
-YksTest = 3
+    /// <summary>
+    /// Admin role with full access
+    /// </summary>
+    YksAdmin = 1,
+    
+    /// <summary>
+    /// User role with edit and view access
+    /// </summary>
+    YksUser = 2,
+    
+    /// <summary>
+    /// Test role with view-only access
+    /// </summary>
+    YksTest = 3
 }
