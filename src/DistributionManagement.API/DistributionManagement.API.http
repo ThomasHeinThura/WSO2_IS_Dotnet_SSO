@@ -1,0 +1,6 @@
+@DistributionManagement.API_HostAddress = http://localhost:5299
+
+GET {{DistributionManagement.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
