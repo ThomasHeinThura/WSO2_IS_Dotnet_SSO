@@ -2,9 +2,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DistributionManagement.Domain.Entities;
 
-/// <summary>
-/// Represents a product in the distribution management system
-/// </summary>
 public class Product
 {
     [Key]
