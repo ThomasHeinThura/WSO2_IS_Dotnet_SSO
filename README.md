@@ -39,6 +39,10 @@ A production-ready **Single Sign-On (SSO)** solution integrating **WSO2 Identity
 │    WSO2 Identity Server 7.1 (OAuth2)         │
 └──────────────────────────────────────────────┘
 ```
+## Authentication Flow
+
+![alt text](image.png)
+
 
 ## 🚀 Quick Start
 
