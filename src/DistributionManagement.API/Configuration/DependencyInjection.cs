@@ -9,7 +9,9 @@ namespace DistributionManagement.API.Configuration;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddApplicationServices(
+        this IServiceCollection services,
+        IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection");
         services.AddDbContext<ApplicationDbContext>(options =>
@@ -24,9 +26,15 @@ public static class DependencyInjection
             }
         });
 
+        // Add HttpClient with logging
         services.AddHttpClient<IAuthenticationService, WSO2AuthenticationService>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(30);
+        })
+        .ConfigureHttpClient((serviceProvider, client) =>
+        {
+            var logger = serviceProvider.GetRequiredService<ILogger<WSO2AuthenticationService>>();
+            logger.LogInformation("HttpClient configured for WSO2AuthenticationService");
         });
 
         services.AddScoped<IProductRepository, ProductRepository>();
@@ -36,7 +44,10 @@ public static class DependencyInjection
         {
             options.AddPolicy("AllowAll", builder =>
             {
-                builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+                builder
+                    .AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
             });
         });
 
