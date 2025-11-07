@@ -65,10 +65,21 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
 app.UseCors("AllowAll");
+
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
+
+// ✅ ADD THESE TWO LINES for static files (HTML, CSS, JS)
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
+// ✅ REDIRECT root to index.html
+app.MapFallbackToFile("index.html");
 
 app.Run();

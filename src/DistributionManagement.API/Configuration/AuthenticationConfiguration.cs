@@ -1,11 +1,14 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 
 namespace DistributionManagement.API.Configuration;
 
 public static class AuthenticationConfiguration
 {
-    public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddJwtAuthentication(
+        this IServiceCollection services,
+        IConfiguration configuration)
     {
         var jwtSettings = configuration.GetSection("JWT");
         var issuer = jwtSettings["Issuer"] ?? throw new InvalidOperationException("JWT Issuer not configured");
@@ -37,6 +40,25 @@ public static class AuthenticationConfiguration
 
             options.Events = new JwtBearerEvents
             {
+                OnTokenValidated = context =>
+                {
+                    // ✅ FIX: Extract roles from JWT token and add them as claims
+                    var claimsIdentity = context.Principal?.Identity as ClaimsIdentity;
+                    
+                    if (claimsIdentity != null)
+                    {
+                        // Get existing roles from token
+                        var existingRoles = context.Principal?.FindAll("roles") ?? Enumerable.Empty<Claim>();
+                        
+                        // Add each role as a role claim
+                        foreach (var role in existingRoles)
+                        {
+                            claimsIdentity.AddClaim(new Claim(ClaimTypes.Role, role.Value));
+                        }
+                    }
+                    
+                    return Task.CompletedTask;
+                },
                 OnAuthenticationFailed = context =>
                 {
                     if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
@@ -49,6 +71,7 @@ public static class AuthenticationConfiguration
         });
 
         services.AddAuthorization();
+
         return services;
     }
 }

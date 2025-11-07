@@ -124,10 +124,15 @@ public class WSO2AuthenticationService : IAuthenticationService
                 throw new InvalidOperationException("Invalid user info response");
             }
 
-            var primaryRole = userInfoResponse.Roles?.FirstOrDefault() ?? string.Empty;
+            // ✅ FIX: Clean up role names - remove "Internal/" prefix
+            var cleanedRoles = userInfoResponse.Roles?
+                .Select(r => r.Replace("Internal/", "").Replace("internal/", ""))
+                .ToList() ?? new List<string>();
 
-            _logger.LogInformation("User info retrieved - Username: {Username}, Role: {Role}", 
-                userInfoResponse.Username, primaryRole);
+            var primaryRole = cleanedRoles.FirstOrDefault() ?? string.Empty;
+
+            _logger.LogInformation("User info retrieved - Username: {Username}, Role: {Role}, All Roles: {AllRoles}", 
+                userInfoResponse.Username, primaryRole, string.Join(", ", cleanedRoles));
 
             return new UserInfoDto
             {
@@ -136,7 +141,7 @@ public class WSO2AuthenticationService : IAuthenticationService
                 FirstName = userInfoResponse.GivenName,
                 LastName = userInfoResponse.FamilyName,
                 Role = primaryRole,
-                Roles = userInfoResponse.Roles ?? new List<string>(),
+                Roles = cleanedRoles,
                 Groups = userInfoResponse.Groups ?? new List<string>()
             };
         }
@@ -167,7 +172,6 @@ public class WSO2AuthenticationService : IAuthenticationService
         }
     }
 
-    // ✅ FIX: Added [JsonPropertyName] attributes for snake_case JSON fields
     private class TokenResponse
     {
         [JsonPropertyName("access_token")]

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distribution Management System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="loginPage" class="page">
+        <div class="login-container">
+            <div class="login-box">
+                <h1>Distribution Management System</h1>
+                <p class="subtitle">Login to access the system</p>
+                
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" placeholder="Enter username" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" placeholder="Enter password" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-block">Login</button>
+                </form>
+                
+                <div id="loginError" class="error-message"></div>
+                
+                <div class="test-users">
+                    <p><strong>Test Users:</strong></p>
+                    <ul>
+                        <li><strong>bimdevops</strong> - yks_user (Edit & View)</li>
+                        <li><strong>yks1</strong> - yks_test (View Only)</li>
+                        <li><strong>yks</strong> - yks_admin (Full Access)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="appPage" class="page hidden">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-brand">
+                    <h2>Distribution Management System</h2>
+                </div>
+                <div class="nav-menu">
+                    <button class="nav-btn" onclick="goToProducts()">📦 Products</button>
+                    <button class="nav-btn" id="usersBtn" onclick="goToUsers()" style="display:none;">👥 Users</button>
+                    <div class="user-info">
+                        <span id="userDisplay"></span>
+                        <button class="nav-btn btn-danger" onclick="handleLogout()">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Products Page -->
+        <div id="productsPage" class="page-content">
+            <div class="container">
+                <div class="page-header">
+                    <h1>Products Management</h1>
+                    <button id="addProductBtn" class="btn btn-success" onclick="openAddProductModal()" style="display:none;">
+                        ➕ Add New Product
+                    </button>
+                </div>
+
+                <div id="productsLoading" class="loading">Loading products...</div>
+                
+                <table id="productsTable" class="table hidden">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Category</th>
+                            <th>SKU</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsBody"></tbody>
+                </table>
+
+                <div id="productsError" class="error-message"></div>
+            </div>
+        </div>
+
+        <!-- Users Page -->
+        <div id="usersPage" class="page-content hidden">
+            <div class="container">
+                <div class="page-header">
+                    <h1>Users Management</h1>
+                </div>
+
+                <div id="usersLoading" class="loading">Loading users...</div>
+                
+                <table id="usersTable" class="table hidden">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersBody"></tbody>
+                </table>
+
+                <div id="usersError" class="error-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div id="productModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Product</h2>
+                <button class="close-btn" onclick="closeProductModal()">×</button>
+            </div>
+            
+            <form id="productForm" onsubmit="handleSaveProduct(event)">
+                <div class="form-group">
+                    <label for="productName">Product Name *</label>
+                    <input type="text" id="productName" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="productDescription">Description</label>
+                    <textarea id="productDescription" rows="3"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="productPrice">Price *</label>
+                        <input type="number" id="productPrice" step="0.01" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productStock">Stock Quantity *</label>
+                        <input type="number" id="productStock" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="productCategory">Category</label>
+                        <input type="text" id="productCategory">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productSku">SKU</label>
+                        <input type="text" id="productSku">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="productActive" checked>
+                        Active
+                    </label>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeProductModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Modal (hidden by default) -->
+    <input type="hidden" id="editProductId">
+
+    <script src="app.js"></script>
+</body>
+</html>
